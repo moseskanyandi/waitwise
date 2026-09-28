@@ -1,0 +1,80 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function userDocExists() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function hasRole(role) {
+      return isSignedIn() && userDocExists() && getUserData().role == role;
+    }
+
+    function isStaff() {
+      return isSignedIn() && (hasRole('STAFF') || hasRole('ADMIN'));
+    }
+
+    function isAdmin() {
+      return isSignedIn() && hasRole('ADMIN');
+    }
+
+    match /facilities/{facilityId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /services/{serviceId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /counters/{counterId} {
+      allow get: if true;
+      allow list: if isStaff();
+      allow create: if request.resource.data.nextNumber == 2
+                    && request.resource.data.date is string
+                    && request.resource.data.facilityId is string
+                    && request.resource.data.serviceId is string;
+      allow update: if request.resource.data.nextNumber == resource.data.nextNumber + 1
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nextNumber']);
+      allow delete: if isAdmin();
+    }
+
+    match /queueEntries/{entryId} {
+      allow get: if true;
+      allow list: if isStaff() || resource.data.status == "WAITING";
+      allow create: if request.resource.data.status == "WAITING"
+                    && request.resource.data.facilityId is string
+                    && request.resource.data.serviceId is string
+                    && request.resource.data.ticketCode is string
+                    && request.resource.data.entryMethod == "patient"
+                    && !('room' in request.resource.data)
+                    && !('completedAt' in request.resource.data);
+      allow update: if isStaff()
+                    && request.resource.data.status in [
+                         'WAITING', 'CALLED', 'IN_CONSULTATION',
+                         'COMPLETED', 'CANCELLED', 'NO_SHOW'
+                       ];
+      allow delete: if isAdmin();
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedIn() && (request.auth.uid == userId || isStaff());
+      allow write: if isAdmin();
+    }
+
+    match /auditLogs/{logId} {
+      allow read: if isStaff();
+      allow write: if isAdmin();
+    }
+  }
+}
