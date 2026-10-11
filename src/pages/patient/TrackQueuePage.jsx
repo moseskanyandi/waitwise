@@ -23,13 +23,13 @@ import {
   PhoneNotificationGraphic,
 } from "../../components/common/Icons";
 
-export function TrackQueuePage() {
+export function TrackQueuePage({ previewState }) {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Retrieve active ticket from route state or recover from local storage
+  // Retrieve active ticket from previewState, route state, or recover from local storage
   const [ticketData, setTicketData] = useState(() => {
-    return location.state || getActiveTicket() || {
+    return previewState || location.state || getActiveTicket() || {
       entryId: "temp_106",
       ticketCode: "A106",
       service: { id: "general-consultation", name: "General Consultation", code: "A" },
@@ -37,15 +37,22 @@ export function TrackQueuePage() {
     };
   });
 
-  const [queueMetrics, setQueueMetrics] = useState({
-    position: 4,
-    positionOrdinal: "4th in line",
-    peopleAhead: 3,
-    estimatedWaitText: "15 – 30 minutes",
+  const [queueMetrics, setQueueMetrics] = useState(() => {
+    if (previewState?.queueMetrics) return previewState.queueMetrics;
+    if (location.state?.queueMetrics) return location.state.queueMetrics;
+    if (location.state?.initialMetrics) return location.state.initialMetrics;
+    const initial = calculateQueuePosition([], null);
+    return {
+      position: initial.position,
+      positionOrdinal: `${initial.positionOrdinal} in line`,
+      peopleAhead: initial.peopleAhead,
+      estimatedWaitText: initial.estimatedWaitText,
+    };
   });
 
   // Listen to Firestore real-time updates for entry status and service queue changes
   useEffect(() => {
+    if (ticketData?.isPreview || previewState?.isPreview) return;
     if (!ticketData?.entryId || !ticketData?.service?.id) return;
 
     const facilityId = ticketData.facility?.id || "main-health-centre";

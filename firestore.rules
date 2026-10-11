@@ -20,7 +20,7 @@ service cloud.firestore {
     }
 
     function isStaff() {
-      return isSignedIn() && (hasRole('STAFF') || hasRole('ADMIN'));
+      return isSignedIn() && hasRole('STAFF') && getUserData().active == true;
     }
 
     function isAdmin() {

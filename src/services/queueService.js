@@ -14,39 +14,10 @@ import db from "./firebase/firestore.js";
 import { INITIAL_SERVICES, DEFAULT_FACILITY_ID, QUEUE_STATUS } from "../constants/queueConstants.js";
 
 /**
- * Baseline initial queue entries for the test situation specified:
- * Patients A, B, and C are already waiting in the service queue.
- * Incoming Patient D will therefore have 3 people ahead and be 4th in line.
+ * Dynamic in-memory queue store used strictly for client fallback/offline resilience.
+ * Does NOT contain preloaded fake patients so real patient positions are never influenced.
  */
-let memoryQueueStore = [
-  {
-    id: "entry_pat_A",
-    ticketCode: "A001",
-    facilityId: DEFAULT_FACILITY_ID,
-    serviceId: "general-consultation",
-    status: "WAITING",
-    enteredAt: new Date(Date.now() - 1000 * 60 * 25).toISOString(),
-    createdAt: new Date(Date.now() - 1000 * 60 * 25).toISOString(),
-  },
-  {
-    id: "entry_pat_B",
-    ticketCode: "A002",
-    facilityId: DEFAULT_FACILITY_ID,
-    serviceId: "general-consultation",
-    status: "WAITING",
-    enteredAt: new Date(Date.now() - 1000 * 60 * 18).toISOString(),
-    createdAt: new Date(Date.now() - 1000 * 60 * 18).toISOString(),
-  },
-  {
-    id: "entry_pat_C",
-    ticketCode: "A003",
-    facilityId: DEFAULT_FACILITY_ID,
-    serviceId: "general-consultation",
-    status: "WAITING",
-    enteredAt: new Date(Date.now() - 1000 * 60 * 10).toISOString(),
-    createdAt: new Date(Date.now() - 1000 * 60 * 10).toISOString(),
-  },
-];
+let memoryQueueStore = [];
 
 const memoryListeners = new Set();
 
@@ -76,19 +47,59 @@ export async function getServices(facilityId = DEFAULT_FACILITY_ID) {
     const snapshot = await getDocs(servicesQuery);
 
     if (!snapshot.empty) {
-      return snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      const fetched = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        let displayOrder = data.displayOrder;
+        let name = data.name;
+        let description = data.description;
+
+        const code = (data.code || "").toUpperCase();
+        const id = doc.id.toLowerCase().trim();
+
+        // Assign numeric displayOrder if not already present in Firestore document
+        if (typeof displayOrder !== "number") {
+          if (code === "A" || id.includes("general") || id.includes("consult")) displayOrder = 1;
+          else if (code === "B" || id.includes("lab")) displayOrder = 2;
+          else if (code === "C" || id.includes("pharm")) displayOrder = 3;
+          else if (code === "D" || id.includes("imag") || id.includes("xray")) displayOrder = 4;
+          else displayOrder = 99;
+        }
+
+        // Ensure patient-facing display name is exactly "Imaging / X-ray"
+        if (code === "D" || id.includes("imag") || id.includes("xray") || (name && name.trim().toLowerCase() === "imaging")) {
+          name = "Imaging / X-ray";
+        }
+
+        // Standardize descriptions to match Screen 2 reference
+        if (code === "A" || id.includes("general")) {
+          description = "See a doctor for a general check-up or medical advice.";
+        } else if (code === "B" || id.includes("lab")) {
+          description = "Get your tests done quickly and safely.";
+        } else if (code === "C" || id.includes("pharm")) {
+          description = "Collect your prescribed medication.";
+        } else if (code === "D" || id.includes("imag")) {
+          description = "Get your scans and imaging services.";
+        }
+
+        return {
+          id: doc.id.trim(),
+          ...data,
+          name: name ? name.trim() : data.name,
+          description: description || data.description,
+          displayOrder,
+        };
+      });
+
+      return fetched.sort((a, b) => (a.displayOrder || 99) - (b.displayOrder || 99));
     }
   } catch (err) {
     console.warn("Could not fetch services from Firestore, using initial catalogue:", err);
   }
 
-  // Fallback to documented initial services
+  // Fallback to documented initial services sorted by displayOrder
   return INITIAL_SERVICES.filter(
     (s) => s.facilityId === facilityId && s.active !== false
-  );
+  ).sort((a, b) => (a.displayOrder || 99) - (b.displayOrder || 99));
 }
 
 /**
@@ -130,7 +141,7 @@ export async function getServiceQueue(facilityId, serviceId) {
 
     const snapshot = await getDocs(queueQuery);
 
-    if (snapshot && !snapshot.empty) {
+    if (snapshot) {
       return snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -343,7 +354,7 @@ export function subscribeToServiceQueue(facilityId, serviceId, onUpdate, onError
     unsubscribeFirestore = onSnapshot(
       queueQuery,
       (snapshot) => {
-        if (snapshot && !snapshot.empty) {
+        if (snapshot) {
           const entries = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
           onUpdate(entries);
         }

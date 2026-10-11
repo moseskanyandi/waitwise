@@ -29,7 +29,10 @@ export function JoinQueuePage() {
       try {
         const data = await getServices(DEFAULT_FACILITY_ID);
         if (isMounted) {
-          setServices(data || []);
+          const sorted = [...(data || [])].sort(
+            (a, b) => (a.displayOrder || 99) - (b.displayOrder || 99)
+          );
+          setServices(sorted);
           setLoading(false);
         }
       } catch (err) {

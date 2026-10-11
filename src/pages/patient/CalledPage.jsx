@@ -18,13 +18,14 @@ import {
   MegaphoneBurstBadge,
 } from "../../components/common/Icons";
 
-export function CalledPage() {
+export function CalledPage({ previewState }) {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Retrieve active ticket from route state or recover from local storage
+  // Retrieve active ticket from previewState, route state, or recover from local storage
   const [ticketData, setTicketData] = useState(() => {
     return (
+      previewState ||
       location.state ||
       getActiveTicket() || {
         entryId: "temp_106",
@@ -39,6 +40,8 @@ export function CalledPage() {
 
   // Listen to Firestore real-time updates for entry status: transition when COMPLETED
   useEffect(() => {
+    // In development preview mode, do not query or subscribe to Firestore
+    if (ticketData?.isPreview || previewState?.isPreview) return;
     if (!ticketData?.entryId) return;
 
     const unsubscribeEntry = subscribeToQueueEntry(

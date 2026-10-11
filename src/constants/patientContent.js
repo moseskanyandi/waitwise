@@ -268,7 +268,8 @@ export const CALLED_CONTENT = {
   eyebrow: "IT'S YOUR TURN!",
   titlePrefix: "Please proceed to ",
   subtitlePrefix: "Your ticket number is ",
-  subtitleSuffix: ". The staff will be ready to see you.",
+  subtitleSuffix: ". Please proceed to the consultation area within 5 minutes. The staff will be ready to see you.",
+  timeInstruction: "Please proceed to the consultation area within 5 minutes.",
   ticketLabel: "YOUR TICKET NUMBER",
   safeNotice: {
     title: "We'll keep your place in the queue safe.",

@@ -82,8 +82,8 @@ body {
 }
 
 .ww-brand-logo-img {
-  width: 52px;
-  height: 52px;
+  width: 62px;
+  height: 62px;
   object-fit: contain;
   flex-shrink: 0;
 }
@@ -94,7 +94,7 @@ body {
 }
 
 .ww-brand-name {
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 800;
   color: var(--ww-navy-title);
   letter-spacing: -0.4px;
@@ -102,7 +102,7 @@ body {
 }
 
 .ww-brand-tagline {
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--ww-slate-muted);
   line-height: 1.3;
@@ -573,8 +573,8 @@ body {
 }
 
 .ww-service-card.selected {
-  border-color: var(--ww-primary-teal);
-  box-shadow: 0 4px 14px -2px rgba(10, 92, 83, 0.14);
+  border-color: #008779 !important;
+  box-shadow: 0 4px 14px -2px rgba(0, 135, 121, 0.16);
 }
 
 .ww-service-card:hover {
@@ -583,23 +583,23 @@ body {
 }
 
 .ww-service-card.theme-teal {
-  background-color: #e9f5f3;
-  border-color: #98d5cc;
+  background-color: #eaf7f5;
+  border-color: transparent;
 }
 
 .ww-service-card.theme-blue {
-  background-color: #e8f3fa;
-  border-color: #9acbeb;
+  background-color: #edf6fd;
+  border-color: transparent;
 }
 
 .ww-service-card.theme-purple {
-  background-color: #f0edf9;
-  border-color: #c6bcf0;
+  background-color: #f5f0fb;
+  border-color: transparent;
 }
 
 .ww-service-card.theme-cyan {
-  background-color: #e6f5f5;
-  border-color: #92d8dc;
+  background-color: #eefaec;
+  border-color: transparent;
 }
 
 .ww-service-icon-circle {
@@ -662,17 +662,20 @@ body {
   color: #ffffff;
 }
 
-.theme-teal .ww-service-arrow-btn,
+.theme-teal .ww-service-arrow-btn {
+  background-color: #008779;
+}
+
 .theme-cyan .ww-service-arrow-btn {
-  background-color: var(--ww-primary-teal);
+  background-color: #00b6c8;
 }
 
 .theme-blue .ww-service-arrow-btn {
-  background-color: #026597;
+  background-color: #6baaf6;
 }
 
 .theme-purple .ww-service-arrow-btn {
-  background-color: #4f46e5;
+  background-color: #8a5fc4;
 }
 
 /* Need Help Banner */

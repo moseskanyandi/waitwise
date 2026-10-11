@@ -18,12 +18,13 @@ import {
   CheckBurstBadge,
 } from "../../components/common/Icons";
 
-export function CompletePage() {
+export function CompletePage({ previewState }) {
   const location = useLocation();
 
-  // Retrieve ticket from route state or recover from local storage
+  // Retrieve ticket from previewState, route state, or recover from local storage
   const [ticketData] = useState(() => {
     return (
+      previewState ||
       location.state ||
       getActiveTicket() || {
         entryId: "temp_106",

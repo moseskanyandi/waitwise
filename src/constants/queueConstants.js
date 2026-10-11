@@ -25,9 +25,10 @@ export const INITIAL_SERVICES = [
     code: "A",
     active: true,
     capacity: 1,
-    description: "See a doctor for a general check-up, illness or medical advice.",
+    description: "See a doctor for a general check-up or medical advice.",
     icon: "stethoscope",
     themeColor: "teal",
+    displayOrder: 1,
   },
   {
     id: "laboratory",
@@ -39,6 +40,7 @@ export const INITIAL_SERVICES = [
     description: "Get your tests done quickly and safely.",
     icon: "flask",
     themeColor: "blue",
+    displayOrder: 2,
   },
   {
     id: "pharmacy",
@@ -50,6 +52,7 @@ export const INITIAL_SERVICES = [
     description: "Collect your prescribed medication.",
     icon: "pill",
     themeColor: "purple",
+    displayOrder: 3,
   },
   {
     id: "imaging",
@@ -61,5 +64,6 @@ export const INITIAL_SERVICES = [
     description: "Get your scans and imaging services.",
     icon: "xray",
     themeColor: "cyan",
+    displayOrder: 4,
   },
 ];

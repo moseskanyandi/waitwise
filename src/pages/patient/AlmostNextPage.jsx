@@ -23,13 +23,14 @@ import {
   PhoneNotificationGraphic,
 } from "../../components/common/Icons";
 
-export function AlmostNextPage() {
+export function AlmostNextPage({ previewState }) {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Retrieve active ticket from route state or recover from local storage
+  // Retrieve active ticket from previewState, route state, or recover from local storage
   const [ticketData, setTicketData] = useState(() => {
     return (
+      previewState ||
       location.state ||
       getActiveTicket() || {
         entryId: "temp_106",
@@ -41,15 +42,21 @@ export function AlmostNextPage() {
     );
   });
 
-  const [queueMetrics, setQueueMetrics] = useState({
-    position: 2,
-    positionOrdinal: "2nd in line",
-    peopleAhead: 1,
-    estimatedWaitText: "5 – 15 minutes",
+  const [queueMetrics, setQueueMetrics] = useState(() => {
+    if (previewState?.queueMetrics) return previewState.queueMetrics;
+    if (location.state?.queueMetrics) return location.state.queueMetrics;
+    return {
+      position: 2,
+      positionOrdinal: "2nd in line",
+      peopleAhead: 1,
+      estimatedWaitText: "5 – 15 minutes",
+    };
   });
 
   // Listen to Firestore real-time updates for entry status and service queue changes
   useEffect(() => {
+    // In development preview mode, do not query or subscribe to Firestore
+    if (ticketData?.isPreview || previewState?.isPreview) return;
     if (!ticketData?.entryId || !ticketData?.service?.id) return;
 
     const facilityId = ticketData.facility?.id || "main-health-centre";

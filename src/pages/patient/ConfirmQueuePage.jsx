@@ -39,11 +39,15 @@ export function ConfirmQueuePage() {
     location: "Lusaka",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [queueMetrics, setQueueMetrics] = useState({
-    position: 4,
-    positionOrdinal: "4th in line",
-    peopleAhead: 3,
-    estimatedWaitText: "15 – 30 minutes",
+  const [queueMetrics, setQueueMetrics] = useState(() => {
+    if (location.state?.queueMetrics) return location.state.queueMetrics;
+    const initial = calculateQueuePosition([], null);
+    return {
+      position: initial.position,
+      positionOrdinal: `${initial.positionOrdinal} in line`,
+      peopleAhead: initial.peopleAhead,
+      estimatedWaitText: initial.estimatedWaitText,
+    };
   });
 
   useEffect(() => {

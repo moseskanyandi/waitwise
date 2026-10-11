@@ -21,13 +21,13 @@ import {
   BotanicalDecoration,
 } from "../../components/common/Icons.jsx";
 
-export function TicketPage() {
+export function TicketPage({ previewState }) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Retrieve active ticket from state or storage
+  // Retrieve active ticket from previewState, state, or storage
   const [ticketData, setTicketData] = useState(() => {
-    return location.state || getActiveTicket() || {
+    return previewState || location.state || getActiveTicket() || {
       entryId: "temp_106",
       ticketCode: "A106",
       service: { id: "general-consultation", name: "General Consultation", code: "A" },
@@ -36,17 +36,20 @@ export function TicketPage() {
   });
 
   const [queueMetrics, setQueueMetrics] = useState(() => {
-    return (
-      location.state?.initialMetrics || {
-        position: 4,
-        positionOrdinal: "4th in line",
-        peopleAhead: 3,
-        estimatedWaitText: "15 – 30 minutes",
-      }
-    );
+    if (previewState?.queueMetrics) return previewState.queueMetrics;
+    if (location.state?.initialMetrics) return location.state.initialMetrics;
+    if (location.state?.queueMetrics) return location.state.queueMetrics;
+    const initial = calculateQueuePosition([], null);
+    return {
+      position: initial.position,
+      positionOrdinal: `${initial.positionOrdinal} in line`,
+      peopleAhead: initial.peopleAhead,
+      estimatedWaitText: initial.estimatedWaitText,
+    };
   });
 
   useEffect(() => {
+    if (ticketData?.isPreview || previewState?.isPreview) return;
     let isMounted = true;
     const facilityId = ticketData.facility?.id || "main-health-centre";
     const serviceId = ticketData.service?.id || "general-consultation";
